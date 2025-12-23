@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FestiveStudio | Premium Card Maker</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Pacifico&family=Poppins:wght@300;600&family=Mountains+of+Christmas:wght@700&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+
+<style>
+/* ---------- THEME VARIABLES ---------- */
+:root {
+  --gold: #c5a059;
+  --bg: #050a14;
+  --accent: #8b0000;
+  --glass: rgba(255,255,255,0.12);
+  --card-bg: #ffffff;
+  --card-text: #1a1a1a;
+  --ornament-color: #8b0000;
+}
+
+[data-theme="candy"] { --gold: #ff4d4d; --bg: #0d1a0d; --accent: #1e4d2b; --ornament-color: #ff4d4d; }
+[data-theme="royal"] { --gold: #9d50bb; --bg: #1a0b2e; --accent: #6e48aa; --ornament-color: #9d50bb; }
+[data-theme="frozen"] { --gold: #00d2ff; --bg: #001f3f; --accent: #3a7bd5; --ornament-color: #00d2ff; }
+
+/* ---------- GLOBAL ---------- */
+html, body {
+  margin: 0; padding: 0;
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg);
+  color: white;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.5s ease;
+}
+
+/* ---------- SNOW ---------- */
+.snow-container { position: fixed; inset: 0; pointer-events: none; z-index: 20; }
+.snow { position: absolute; top: -10px; animation: fall linear infinite; transition: transform 0.2s; }
+@keyframes fall { to { transform: translateY(110vh); } }
+
+/* ---------- HOME PAGE ---------- */
+#homePage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  align-items: center;
+}
+
+.hero-text {
+  padding: 0 10%;
+  z-index: 2;
+}
+
+.hero-img-side {
+  width: 100%;
+  height: 100vh;
+  object-fit: cover; /* Displays full image to fill the right half */
+}
+
+/* Floating Countdown - Top Right */
+.countdown-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0,0,0,0.6);
+  padding: 15px 25px;
+  border-radius: 50px;
+  border: 1px solid var(--gold);
+  font-family: 'Cinzel', serif;
+  color: var(--gold);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+  text-align: center;
+}
+
+/* ---------- EDITOR PAGE ---------- */
+#editorPage {
+  display: none;
+  padding: 60px 20px;
+  gap: 40px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.control-panel {
+  width: 100%;
+  max-width: 380px;
+  background: var(--glass);
+  padding: 30px;
+  border-radius: 20px;
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Fixed Dropdown Background Issues */
+select, input, textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  margin: 10px 0;
+  background: rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid var(--gold);
+  color: white !important;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+select option {
+  background-color: #1a1a1a;
+  color: white;
+}
+
+/* ---------- THE CARD ---------- */
+.card-wrapper { perspective: 1000px; }
+
+.card {
+  width: 380px;
+  height: 420px; /* Kept exactly as your version */
+  background: var(--card-bg);
+  color: var(--card-text);
+  padding: 40px;
+  position: relative;
+  border-radius: 5px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
+/* Pulsing Border Animation */
+.card-border {
+  position: absolute;
+  inset: 15px;
+  border: 2px solid var(--gold);
+  pointer-events: none;
+  animation: borderFade 3s infinite ease-in-out;
+}
+@keyframes borderFade {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Hanging Ornaments */
+.ornaments {
+  position: absolute;
+  top: -5px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  pointer-events: none;
+}
+.ornament {
+  width: 1px;
+  height: 40px;
+  background: var(--gold);
+  position: relative;
+  transform-origin: top;
+  animation: swing 4s infinite ease-in-out;
+}
+.ornament::after {
+  content: '●';
+  position: absolute;
+  bottom: -10px;
+  left: -7px;
+  font-size: 18px;
+  color: var(--ornament-color);
+}
+@keyframes swing {
+  0%, 100% { transform: rotate(5deg); }
+  50% { transform: rotate(-5deg); }
+}
+
+.card-content { position: relative; z-index: 5; text-align: center; }
+
+.card-content h1 {
+  font-family: 'Cinzel', serif;
+  color: var(--accent);
+  font-size: 2.2rem;
+  margin: 10px 0 5px 0;
+}
+
+/* Divider Line */
+.card-divider {
+  width: 40px;
+  height: 2px;
+  background: var(--gold);
+  margin: 0 auto 10px auto;
+  opacity: 0.5;
+}
+
+/* The Christmas Tree Image on Card */
+
+
+.card-decoration {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 150px;
+}
+
+/* ---------- BUTTONS ---------- */
+.btn {
+  padding: 15px 25px;
+  border: 2px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.btn:hover { background: var(--gold); color: black; }
+.btn-surprise { border-color: #ff4d4d; color: #ff4d4d; width: 100%; margin: 10px 0; }
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 850px) {
+  #homePage { grid-template-columns: 1fr; }
+  .hero-img-side { height: 40vh; }
+  .countdown-container { position: relative; top: 0; right: 0; margin: 20px auto; width: fit-content; }
+}
+</style>
+</head>
+<body>
+
+<div class="snow-container" id="snowContainer"></div>
+
+<div class="countdown-container" id="countdownBox">
+  <div style="font-size: 0.7rem; opacity: 0.8;">NEW YEAR 2026 IN:</div>
+  <div id="countdownTimer" style="font-weight: bold; font-size: 1.2rem;">00:00:00:00</div>
+</div>
+
+<section id="homePage">
+  <div class="hero-text">
+    <h1 style="font-family:'Cinzel'; color:var(--gold); font-size:3.5rem; margin-bottom:10px;">FESTIVE<br>STUDIO</h1>
+    <p style="font-size:1.2rem; margin-bottom:30px; opacity:0.9;">Create, customize, and share professional holiday cards instantly.</p>
+    <button class="btn" onclick="openEditor()">Enter the Studio</button>
+  </div>
+  
+  <img src="./Images/christmas-bottom.png" class="hero-img-side" alt="Full Christmas Background">
+</section>
+
+<section id="editorPage">
+  <div class="control-panel">
+    <h2 style="color:var(--gold); margin-top:0;">Customizer</h2>
+    
+    <label>Theme</label>
+    <select onchange="switchTheme(this.value)">
+      <option value="">Midnight Gold</option>
+      <option value="candy">Candy Cane</option>
+      <option value="royal">Royal Purple</option>
+      <option value="frozen">Frozen Blue</option>
+    </select>
+
+    <label>Typography</label>
+    <select id="fontPicker" onchange="updateCard()">
+      <option value="'Mountains of Christmas'">Festive Script</option>
+      <option value="'Poppins'">Modern Sans</option>
+      <option value="'Playfair Display'">Elegant Serif</option>
+      <option value="'Pacifico'">Handwritten</option>
+    </select>
+
+    <input id="nameInput" placeholder="Sender's Name" oninput="updateCard()">
+    <textarea id="msgInput" rows="3" placeholder="Write your message..." oninput="updateCard()"></textarea>
+
+    <button class="btn btn-surprise" onclick="surpriseMe()">✨ Surprise Me</button>
+    <button class="btn" style="width:100%; margin-bottom:10px;" onclick="downloadCard()">Download Card (PNG)</button>
+    <button class="btn" style="width:100%; border:none; font-size:0.7rem;" onclick="copyLink()">Copy Share Link</button>
+    <p id="status" style="font-size:0.8rem; text-align:center;"></p>
+  </div>
+
+  <div class="card-wrapper">
+    <div id="card" class="card" onmousemove="tiltCard(event)" onmouseleave="resetTilt()">
+      <div class="card-border"></div>
+      
+      <div class="ornaments">
+        <div class="ornament" style="animation-delay: 0s;"></div>
+        <div class="ornament" style="animation-delay: 0.3s;"></div>
+        <div class="ornament" style="animation-delay: 0.6s;"></div>
+      </div>
+
+      <img src="./Images/christmas-bottom.png" class="card-decoration">
+
+      <div class="card-content">
+        <div style="letter-spacing:5px; font-family:'Cinzel'; opacity:0.6; font-size:0.8rem;">MERRY</div>
+        <h1>CHRISTMAS</h1>
+        <div class="card-divider"></div>
+
+        <p id="cardMsg" style="margin-top:15px; font-family:'Mountains of Christmas'; font-size:1.3rem; line-height:1.4;">
+          Wishing you a season filled with magic and wonder!
+        </p>
+        <div style="margin-top:30px;">
+          <small>Warmest Wishes,</small><br>
+          <span id="cardName" style="font-family:'Pacifico'; font-size:1.4rem; color:var(--accent);">Sender</span>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+<script>
+function openEditor() {
+  document.getElementById('homePage').style.display = "none";
+  document.getElementById('editorPage').style.display = "flex";
+}
+
+function switchTheme(theme) {
+  document.body.setAttribute("data-theme", theme);
+}
+
+const quotes = [
+  "May the magic of Christmas sparkle in your heart and illuminate your path throughout the season. Beyond the gifts and decorations, I hope you find wonder in the quiet moments and let the true spirit of Christmas bring you lasting joy.",
+  "Wishing you a New Year full of peace and prosperity. As the calendar turns, may you find the serenity to face any challenge and the abundance of opportunities needed to turn your biggest dreams into a successful and rewarding reality",
+  "Sending love and joy from our home to yours. During this special time of year, we are thinking of you and hoping that your house is filled with the warmth of family, the comfort of friendship, and endless happy memories.",
+  "May your holidays be merry and bright! I hope every day of this festive season is wrapped in happiness and tied with a bow of laughter, creating a beautiful celebration that stays with you long after the winter snow melts.",
+  "Cheers to a wonderful 2026! Let us raise a glass to the adventures ahead and the lessons we’ve learned. May this coming year be your most vibrant chapter yet, filled with health, happiness, and incredible milestones to celebrate together."
+];
+
+function surpriseMe() {
+  document.getElementById('msgInput').value = quotes[Math.floor(Math.random() * quotes.length)];
+  updateCard();
+}
+
+function updateCard() {
+  document.getElementById('cardName').innerText = document.getElementById('nameInput').value || "Sender";
+  document.getElementById('cardMsg').innerText = document.getElementById('msgInput').value || "Wishing you a season filled with magic and wonder!";
+  document.getElementById('cardMsg').style.fontFamily = document.getElementById('fontPicker').value;
+}
+
+/* 3D Tilt Logic */
+function tiltCard(e) {
+  const card = document.getElementById('card');
+  const rect = card.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width - 0.5;
+  const y = (e.clientY - rect.top) / rect.height - 0.5;
+  card.style.transform = `rotateY(${x * 20}deg) rotateX(${y * -20}deg)`;
+}
+
+function resetTilt() {
+  document.getElementById('card').style.transform = "rotate(0)";
+}
+
+/* Countdown Logic */
+function updateCountdown() {
+  const target = new Date("Jan 1, 2026 00:00:00").getTime();
+  const now = new Date().getTime();
+  const diff = target - now;
+
+  const d = Math.floor(diff / (86400000));
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+
+  document.getElementById('countdownTimer').innerHTML = `${d}d ${h}h ${m}m ${s}s`;
+}
+setInterval(updateCountdown, 1000);
+
+/* Interactive Snow */
+function createSnow() {
+  const container = document.getElementById('snowContainer');
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement("div");
+    s.className = "snow";
+    s.innerHTML = "❄";
+    s.style.left = Math.random() * 100 + "vw";
+    s.style.fontSize = (Math.random() * 15 + 10) + "px";
+    s.style.opacity = Math.random();
+    s.style.animationDuration = (Math.random() * 3 + 5) + "s";
+    container.appendChild(s);
+  }
+}
+
+document.addEventListener('mousemove', (e) => {
+  const flakes = document.querySelectorAll('.snow');
+  flakes.forEach(f => {
+    const rect = f.getBoundingClientRect();
+    const dist = Math.hypot(e.clientX - rect.left, e.clientY - rect.top);
+    if (dist < 80) f.style.transform = `translate(${(e.clientX - rect.left)/-2}px, 20px)`;
+  });
+});
+
+async function downloadCard() {
+  const canvas = await html2canvas(document.getElementById('card'), { scale: 3, useCORS: true });
+  const link = document.createElement("a");
+  link.download = "my-festive-card.png";
+  link.href = canvas.toDataURL();
+  link.click();
+}
+
+function copyLink() {
+  const url = `${location.origin}${location.pathname}?from=${encodeURIComponent(document.getElementById('nameInput').value)}&msg=${encodeURIComponent(document.getElementById('msgInput').value)}`;
+  navigator.clipboard.writeText(url);
+  document.getElementById('status').innerText = "Link copied to clipboard!";
+  setTimeout(() => document.getElementById('status').innerText = "", 3000);
+}
+
+window.onload = () => { createSnow(); updateCountdown(); };
+</script>
+</body>
+</html>
